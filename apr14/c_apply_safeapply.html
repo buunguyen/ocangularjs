@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html ng-app="myApp">
+  <script src="http://code.angularjs.org/1.2.15/angular.js"></script>
+  <script>
+
+    /*------------------------------------------------------------
+     * Demonstrates manual $apply and safeApply
+     -------------------------------------------------------------*/
+
+    var app = angular.module('myApp', [])
+    
+    app.controller("Ctrl", function($scope, safeApply) {
+      $scope.counter = 0;
+      $scope.inc = function() {
+        $scope.counter++;   // works for btn1 but not btn2
+        //$scope.$apply();  // works for btn2 but not btn1
+        //safeApply($scope) // works for both
+      }
+      document.getElementById('btn2').addEventListener('click', $scope.inc)
+    })
+
+    app.factory('safeApply', function() { 
+      return function(scope, expr) {
+        if (!scope.$root.$$phase) scope.$apply(expr)
+        else if (expr) scope.$eval(expr) 
+      }
+    })
+  </script>
+  <body>
+    <div ng-controller="Ctrl">
+      <button ng-click="inc()">Increase (ngClick)</button>
+      <button id="btn2">Increase (event)</button>
+      <div ng-bind="counter">
+    </div>
+  </body>
+</html>

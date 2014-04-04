@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html ng-app="myApp">
+  <script src="http://code.angularjs.org/1.2.15/angular.js"></script>
+  <script>
+
+    /*------------------------------------------------------------
+     * Demonstrates why scope.$digest() might not be that helpful in many cases
+     -------------------------------------------------------------*/
+
+    var app = angular.module('myApp', [])
+    app.controller("Ctrl", function($scope) {
+      $scope.event = {
+        name: 'SoCal AngularJS'
+      }
+    })
+
+    app.controller('ChildCtrl', function($scope, $rootScope) {
+      document.getElementById('btn').addEventListener('click', function() {
+        $scope.event.name = 'some other event'
+        $scope.$digest()        // will NOT work: parent scope's watches not run
+        // $scope.$apply()      // will work
+        // $rootScope.$digest() // will work
+      }) 
+    })
+  </script>
+  <body>
+    <div ng-controller="Ctrl">
+      Event: <span ng-bind="event.name"></span>
+      <div ng-controller="ChildCtrl">
+        <button id='btn'>Change event name</button>
+      </div>
+    </div>
+  </body>
+</html>

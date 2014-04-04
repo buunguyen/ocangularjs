@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html ng-app="myApp">
+  <script src="http://code.angularjs.org/1.2.15/angular.js"></script>
+  <script>
+
+    /*------------------------------------------------------------
+     * Implements some common data-binding directives
+     -------------------------------------------------------------*/
+
+    var app = angular.module('myApp', [])
+    app.controller("Ctrl", function($scope, $sce) {
+      $scope.txt = "Angular"
+      $scope.$watch('txt', function(txt) {
+        $scope.html = $sce.trustAsHtml("<b>" + txt + "</b>")
+      })
+      $scope.reset = function() {
+        $scope.txt = "Angular"
+      }
+    })
+
+    //=============== myBind
+    app.directive('myBind', function() {
+      return {
+        link: function($scope, $elm, $attrs) {
+          var model = $attrs.myBind
+          $scope.$watch(model, function(value) {
+            $elm.text(value)
+          })
+        }
+      }
+    })
+    
+    //=============== myBindTemplate
+    app.directive('myBindTemplate', function() {
+      return {
+        link: function($scope, $elm, $attrs) {
+          $attrs.$observe("myBindTemplate", function(value) {
+            $elm.text(value)
+          })
+        }
+      }
+    })
+
+    //=============== $parse, $interpolate
+    app.run(function($rootScope, $parse, $interpolate) {
+      var scope = $rootScope
+      scope.event = {
+        name: 'OC AngularJS',
+        place: 'Kareo'
+      }
+
+      var fn = $parse('event.name');
+      console.log(1, fn(scope));
+      console.log(2, $parse('event.name | uppercase')(scope));
+      console.log(3, $parse('event.name + " @ " + event.place')(scope));
+
+      try {
+        console.log(4, $parse('{{event.name}} @ {{event.place}}')(scope));
+      } catch (e) { 
+        console.log (e) 
+      }
+
+      console.log(5, $interpolate('{{event.name}} @ {{event.place}}')(scope));
+      console.log(6, $interpolate('{{event.name | uppercase}} @ {{event.place}}')(scope));
+      console.log(7, [$parse('event.name | uppercase')(scope), ' @ ', $parse('event.place')(scope)].join(""))
+    })
+
+    //=============== myBindHtml
+    app.directive('myBindHtml', function($parse, $sce) {
+      return {
+        link: function($scope, $elm, $attrs) {
+          var model = $attrs.myBindHtml
+          var parsed = $parse(model)
+          function getValue(scope) {
+            return parsed(scope).toString()
+          }
+          $scope.$watch(getValue, function() {
+            $elm.html($sce.getTrustedHtml(parsed($scope)))
+          })
+        }
+      }
+    })
+
+    //=============== myTxtInterpolationSim (vastly simplified, but shoudl be enough to get the idea)
+    app.directive("myTxtInterpolationSim", function($interpolate) {
+      return {
+        link: function($scope, $elm, $attrs) {
+          var txt = $elm.text().replace(/\[\[/g, "{{").replace(/\]\]/g, "}}")
+          var exp = $interpolate(txt, true)
+          if (!exp) return
+          $scope.$watch(exp, function(val) {
+            $elm.text(val);
+          })
+        }
+      }
+    })
+
+    //=============== myAttrInterpolationSim: (vastly simplified)
+    app.directive("myAttrInterpolationSim", function($interpolate) {
+      return {
+        link: function($scope, $elm, $attrs) {
+          var targetAttr = $attrs.myAttrInterpolationSim
+          var txt = $attrs[targetAttr].replace(/\[\[/g, "{{").replace(/\]\]/g, "}}")
+          var exp = $interpolate(txt, true)
+          if (!exp) return
+          $scope.$watch(exp, function(val) {
+            // $set will invoke all observers registered with $observe
+            // this shows that $observe is built on top of $watch
+            // thanks to the implicit attrInterpolationDirective
+            $attrs.$set(targetAttr, val)
+          })
+
+          // shows that observer is invoked whenever $set is called
+          $attrs.$observe(targetAttr, function(val) {
+            console.log("$observe: " + val)
+          })
+        }
+      }
+    })
+
+    //=============== myModel (vastly simplified, textbox only)
+    app.directive("myModel", function() {
+      return {
+        link: function($scope, $elm, $attrs) {
+          var prop = $attrs.myModel
+          
+          $elm.on("input", function() {
+            $scope[prop] = $elm.val()
+            $scope.$apply()
+          })
+
+          $scope.$watch(prop, function(value) {
+            $elm.val(value)
+          })
+        }
+      }
+    })    
+  </script>
+  <body>
+    <div ng-controller="Ctrl">
+      <div>
+        Bind with myBind: Hello, <span my-bind="txt"></span>!
+      </div>
+      <div>
+        Bind with myBindTemplate: <span my-bind-template="Hello, {{txt}}!"></span>
+      </div>
+      <div>
+        Bind with myBindHtml: Hello, <span my-bind-html="html"></span>!
+      </div>
+      <div my-txt-interpolation-sim>
+        Bind with my text interpolation: Hello, [[txt]]!
+      </div>
+      <div some-attribute="Hello, [[txt]]!" my-attr-interpolation-sim="someAttribute">
+        Bind with my attribute interpolation, inspect to see me
+      </div>
+      <div>
+        Bind with myModel: Hello, {{txt}}! <input type="text" my-model="txt">
+        <button ng-click="reset()">Reset</button>
+      </div>
+    </div>
+  </body>
+</html>

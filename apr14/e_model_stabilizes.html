@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html ng-app="myApp">
+  <script src="http://code.angularjs.org/1.2.15/angular.js"></script>
+  <script>
+
+    /*------------------------------------------------------------
+     * Demonstrates digest reruns after a dirty; if model keeps changing -> error
+     -------------------------------------------------------------*/
+
+  	var app = angular.module('myApp', [])
+
+  	app.controller("Ctrl", function($scope, $timeout) {
+  		$scope.counter = 0;
+
+  		$scope.inc = function() {
+  			console.clear()
+  			$scope.counter++
+  			console.log('clicked, changed to' + $scope.counter)
+  		}
+      
+  		$scope.$watch(
+  			function() {
+  				console.log('getter')
+  				return $scope.counter
+  			}, 
+  			function(val, oldval) {
+  				if (val === oldval) return
+  				console.log(oldval, '->', val)	
+  				// $scope.counter++ // comment out to see model keeps changing -> iteration limit error
+  			}
+  		)
+  	})
+  </script>
+  <body>
+  	<div ng-controller="Ctrl">
+  		<button ng-click="inc()">Increase</button>
+  		<div ng-bind="counter">
+  	</div>
+  </body>
+</html>

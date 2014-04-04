@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html ng-app="myApp">
+  <script src="http://code.angularjs.org/1.2.15/angular.js"></script>
+  <script>
+
+    /*------------------------------------------------------------
+     * This file shows data-binding directives, we'll implement/simulate these in b_my_binding.html
+     -------------------------------------------------------------*/
+
+    var app = angular.module('myApp', [])
+    app.controller("Ctrl", function($scope, $sce) {
+      $scope.txt = "Angular"
+      $scope.$watch('txt', function(txt) {
+        $scope.html = $sce.trustAsHtml("<b>" + txt + "</b>")
+      })
+      $scope.reset = function() {
+        $scope.txt = "Angular"
+      }
+    })
+  </script>
+  <body>
+    <div ng-controller="Ctrl">
+      <div>
+        Bind with ngBind: Hello, <span ng-bind="txt"></span>!
+      </div>
+      <div>
+        Bind with ngBindTemplate: <span ng-bind-template="Hello, {{txt}}!"></span>
+      </div>
+      <div>
+        Bind with ngBindHtml: Hello, <span ng-bind-html="html"></span>!
+      </div>
+      <div>
+        Bind with text interpolation: Hello, {{txt}}!
+      </div>
+      <div some-attribute="Hello, {{txt}}!">
+        Bind with attribute interpolation, inspect to see me
+      </div>
+      <div>
+        Bind with ngModel: Hello, {{txt}}! <input type="text" ng-model="txt">
+        <button ng-click="reset()">Reset</button>
+      </div>
+    </div>
+  </body>
+</html>
